@@ -9,7 +9,7 @@ num = 0
 prob = 1
 a = parent
 line_request = 0
-open("database.csv", "a+r")
+open("database.csv")
 
 chance = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 values = [0, 1, 0, 1]
@@ -33,14 +33,14 @@ def choose():
 print(choose())
 
 # basic writer
-with open('/home/garrett/DiscordBot/database.csv', mode='a') as db_file:
+with open('database.csv', mode='a') as db_file:
     fieldnames = ['parent', 'child', 'chance_rank', 'time_said', 'chance_boolean']
     db = csv.writer(db_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
     if parent != ('Good', 'good', 'Bad', 'bad'):
         db.writerow([parent, child, chanceval, num, prob])
 
 # basic reader
-with open('/home/garrett/DiscordBot/database.csv') as csv_file:
+with open('database.csv') as csv_file:
     csv_reader = csv.reader(csv_file, delimiter=',')
     line_count = 0
     for row in csv_reader:
@@ -52,7 +52,7 @@ with open('/home/garrett/DiscordBot/database.csv') as csv_file:
 
 
 if line_request == 1:
-    with open("/home/garrett/DiscordBot/database.csv") as f_obj:
+    with open("database.csv") as f_obj:
         reader = csv.reader(f_obj, delimiter=',')
         for line in reader:
             print(line)
