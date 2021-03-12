@@ -1,15 +1,25 @@
 import random
 import csv
-string = str(input())
-parent = input(string)
+import pandas as pd
+import time
+string = input()
+parent = string
+check = 1
 response = 0
 child = response
 chanceval = 0
 num = 0
 prob = 1
-a = parent
+a = input()
 line_request = 0
-open("database.csv")
+found = 0
+col_list = ['parent', 'child', 'chance_rank', 'time_said', 'chance_boolean']
+df = pd.read_csv("database.csv", usecols=col_list)
+chancerequest = 0
+
+if string != ():
+    check = 1
+
 
 chance = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 values = [0, 1, 0, 1]
@@ -30,36 +40,36 @@ def choose():
         return random.choice(chance)
 
 
-print(choose())
+if input() is not None:
+    if input().lower() not in ["good", "bad"]:
+        with open('database.csv', mode='a') as db_file:
+            db = csv.writer(db_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            db.writerow([parent, child, chanceval, num, prob])
 
-# basic writer
-with open('database.csv', mode='a') as db_file:
-    fieldnames = ['parent', 'child', 'chance_rank', 'time_said', 'chance_boolean']
-    db = csv.writer(db_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    if parent != ('Good', 'good', 'Bad', 'bad'):
-        db.writerow([parent, child, chanceval, num, prob])
 
-# basic reader
-with open('database.csv') as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=',')
-    line_count = 0
-    for row in csv_reader:
-        if line_count == 0:
-            line_count += 1
-        else:
-            line_count += 1
-    print(f'Processed {line_count} lines.')
-
+if input() != ():
+    line_request = 1
 
 if line_request == 1:
     with open("database.csv") as f_obj:
         reader = csv.reader(f_obj, delimiter=',')
         for line in reader:
-            print(line)
             if a in line:
-                print("String found in first row of csv")
+                found = found + 1
                 line_request = 0
             else:
-                print("Error: Term", parent, "Not found. Line not printed.",
-                      "Epsilon will be attempted.")
                 line_request = 0
+
+if found == 1:
+    if input().lower() not in ["good", "bad"]:
+        print("String", f'"{input()}"', "found", f'{found} times')
+    else:
+        print("Error: Could not find term", input(), "Epsilon will be attempted")
+
+if input().lower() in "good":
+    print("Added to Database")
+    chancerequest = df("chance_rank") + 1
+
+if input().lower() in "bad":
+    print("Added to Database")
+    chancerequest = df("chance_rank") - 1
