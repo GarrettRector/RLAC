@@ -1,7 +1,8 @@
 import random
 import csv
-import pandas as pd
-import multiprocessing as mp
+from pandas import pd
+import aiofiles
+from aiocsv import AsyncReader, AsyncWriter
 # child is response. Link to response with Epsilon Greed policy later
 child = 0
 chanceval = 0
@@ -14,23 +15,22 @@ df = pd.read_csv("database.csv", usecols=col_list)
 chancerequest = 0
 
 
-def writer():
-    if input().lower() not in ["good", "bad"]:
-        with open('database.csv', mode='a') as db_file:
-            db = csv.writer(db_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            db.writerow([input(), child, chanceval, num, prob])
-            print("works")
+async def reader():
+    async with aiofiles.open("database.csv", mode="r", encoding="utf-8", newline="") as afp:
+        async for row in AsyncReader(afp):
+            print(row)  # row is a list
 
 
-if __name__ == '__main__':
-    ctx = mp.get_context('spawn')
-    p = ctx.Process(target=writer)
-    p.start()
-    print("test")
-    p.join()
+async def writer():
+    async with aiofiles.open("database.csv", mode="a", encoding="utf-8", newline="") as afp:
+        asyncwriter = AsyncWriter(afp, dialect="unix")
+        await asyncwriter.writerow(["name", "age"])
+        await asyncwriter.writerows([
+            [input(), child, chanceval, num, prob]
+        ])
 
-
-print("works")
+print("hello")
+print("hello again")
 if input().lower == "good":
     print("Added to Database")
     chancerequest = df("chance_rank") + 1
@@ -69,7 +69,9 @@ with open("database.csv") as f_obj:
         if input() in line:
             found = found + 1
 
+
 if input().lower not in ["good", "bad"]:
-    print("String", f'"{input()}"', "found", f'{found} times')
-else:
-    print("Error: Could not find term", input(), "Epsilon will be attempted")
+    if input() > found-1:
+        print("String", f'"{input()}"', "found", f'{found} times')
+    else:
+        print("Error: Could not find term", input(), "Epsilon will be attempted")
