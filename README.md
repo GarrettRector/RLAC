@@ -4,3 +4,6 @@ It by no means is a "State of the art" bot, it just uses base python libraries, 
 created, but if you would like to use it feel free to. just respect the copyright laws. 
 
 Note: I am not a professional programmer and there will be organization errors. If it annoys you enough just add it to pull requests and I will most likely edit it
+
+# Changes
+Because of the nature of this type of program, changes will happen. Datasets may need to be erased in order to be compatible with the next version, or errors will occur.
