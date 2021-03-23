@@ -1,6 +1,7 @@
 import random
 import csv
-from pandas import pd
+import asyncio
+import pandas as pd
 import aiofiles
 from aiocsv import AsyncReader, AsyncWriter
 # child is response. Link to response with Epsilon Greed policy later
@@ -13,6 +14,7 @@ found = 1
 col_list = ['parent', 'child', 'chance_rank', 'time_said', 'chance_boolean']
 df = pd.read_csv("database.csv", usecols=col_list)
 chancerequest = 0
+message = input()
 
 
 async def reader():
@@ -24,13 +26,28 @@ async def reader():
 async def writer():
     async with aiofiles.open("database.csv", mode="a", encoding="utf-8", newline="") as afp:
         asyncwriter = AsyncWriter(afp, dialect="unix")
-        await asyncwriter.writerow(["name", "age"])
+        await asyncwriter.writerow([input(), child, chanceval, num, prob])
         await asyncwriter.writerows([
             [input(), child, chanceval, num, prob]
         ])
 
-print("hello")
-print("hello again")
+
+def record_message(message):
+    async with aiofiles.open("database.csv", mode="a", encoding="utf-8", newline="") as afp:
+        asyncwriter = AsyncWriter(afp, dialect="unix")
+        await asyncwriter.writerow([message, child, chanceval, num, prob])
+        await asyncwriter.writerows([
+            [message, child, chanceval, num, prob]
+        ])
+
+def record_response_score(message, score):
+    
+
+def generate_response(message):
+
+
+asyncio.run(reader())
+
 if input().lower == "good":
     print("Added to Database")
     chancerequest = df("chance_rank") + 1
@@ -38,10 +55,6 @@ if input().lower == "good":
 if input().lower == "bad":
     print("Added to Database")
     chancerequest = df("chance_rank") - 1
-
-
-if input() is not None:
-    check = 1
 
 
 chance = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -75,3 +88,14 @@ if input().lower not in ["good", "bad"]:
         print("String", f'"{input()}"', "found", f'{found} times')
     else:
         print("Error: Could not find term", input(), "Epsilon will be attempted")
+
+while True:
+    message = input('>')
+    record_message(message)
+    response = generate_response(message)
+    print(response)
+    score = input('Good? >')
+    if score == "good":
+        record_response_score(response, 1)
+    else:
+        record_response_score(response, -1)
