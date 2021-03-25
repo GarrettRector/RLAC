@@ -1,9 +1,6 @@
 import random
 import csv
-import asyncio
 import pandas as pd
-import aiofiles
-from aiocsv import AsyncReader, AsyncWriter
 # child is response. Link to response with Epsilon Greed policy later
 child = 0
 chanceval = 0
@@ -11,42 +8,34 @@ num = 0
 prob = 1
 line_request = 0
 found = 1
-col_list = ['parent', 'child', 'chance_rank', 'time_said', 'chance_boolean']
-df = pd.read_csv("database.csv", usecols=col_list)
+df = pd.read_csv("database.csv")
 chancerequest = 0
 message = input()
 
 
-async def reader():
-    async with aiofiles.open("database.csv", mode="r", encoding="utf-8", newline="") as afp:
-        async for row in AsyncReader(afp):
-            print(row)  # row is a list
+def line_find(message):
+    df = pd.read_csv("database.csv")
+    filtered_df = df[df['parent'].str.contains(message, na=False)]
+    return filtered_df.index[0]
 
-
-async def writer():
-    async with aiofiles.open("database.csv", mode="a", encoding="utf-8", newline="") as afp:
-        asyncwriter = AsyncWriter(afp, dialect="unix")
-        await asyncwriter.writerow([input(), child, chanceval, num, prob])
-        await asyncwriter.writerows([
-            [input(), child, chanceval, num, prob]
-        ])
-
-
-def record_message(message):
-    async with aiofiles.open("database.csv", mode="a", encoding="utf-8", newline="") as afp:
-        asyncwriter = AsyncWriter(afp, dialect="unix")
-        await asyncwriter.writerow([message, child, chanceval, num, prob])
-        await asyncwriter.writerows([
-            [message, child, chanceval, num, prob]
-        ])
 
 def record_response_score(message, score):
-    
+    df = pd.read_csv("database.csv")
+    datarow = (df[df['parent'] == message].index[0])
+    filtered_df = df[df['parent'].str.contains(message, na=False)]
+    row = filtered_df.index[0]
+    print(datarow)
+    print(row)
+    print(df)
+    if datarow == row:
+        df.iloc[datarow, 2] += score
+    print(df)
+    df.to_csv(r'database.csv', index=False)
 
-def generate_response(message):
 
+def get_response(message):
+    pass
 
-asyncio.run(reader())
 
 if input().lower == "good":
     print("Added to Database")
@@ -89,13 +78,20 @@ if input().lower not in ["good", "bad"]:
     else:
         print("Error: Could not find term", input(), "Epsilon will be attempted")
 
+
+def record_message(message):
+    pass
+
+
 while True:
     message = input('>')
     record_message(message)
-    response = generate_response(message)
+    response = get_response(message)
     print(response)
     score = input('Good? >')
     if score == "good":
         record_response_score(response, 1)
-    else:
+    elif score == "bad":
         record_response_score(response, -1)
+    else:
+        record_response_score(response, -0.1)
