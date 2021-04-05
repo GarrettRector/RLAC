@@ -1,34 +1,126 @@
 import random
 import csv
 import pandas as pd
-# child is response. Link to response with Epsilon Greed policy later
-child = 0
-chanceval = 0
-num = 0
-prob = 1
-line_request = 0
+import tflearn
+import tensorflow
+import numpy
+import nltk
+import json
+import pickle
+from nltk.stem.lancaster import LancasterStemmer
+stemmer = LancasterStemmer()
 df = pd.read_csv("database.csv")
-chancerequest = 0
 chance = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 values = [0, 1, 0, 1]
 
-def line_find(message):
-    df = pd.read_csv("database.csv")
-    filtered_df = df[df['parent'].str.contains(message, na=False)]
-    return filtered_df.index[0]
 
-
-def record_response_score(message, score, response):
+def record_response_score(msg, Score, resp):
     df = pd.read_csv("database.csv")
-    val = df.loc[(df["parent"] == message) & (df["child"] == response), "chance_rank"]
-    row = (val.to_string(index=False))
-    df.loc[float(row)-2, 'chance_rank'] += float(score)
+    val = df.loc[(df["parent"] == msg) & (df["child"] == resp), "chance_rank"]
+    row = val.to_string(index=False)
+    row = int(row)
+    df.loc[row, 'chance_rank'] += Score
     df.to_csv(r'database.csv', index=False)
 
 
-def generate_response():
+def generate_response(msg):
     df = pd.read_csv("database.csv")
-    df.combine()
+    df.combine("parent", "child")
+
+    with open("intents.json") as file:
+        data = json.load(file)
+
+    try:
+        with open("data.pickle", "rb") as f:
+            words, labels, training, output = pickle.load(f)
+    except:
+        words = []
+        labels = []
+        docs_x = []
+        docs_y = []
+
+        for intent in data["intents"]:
+            for pattern in intent["patterns"]:
+                wrds = nltk.word_tokenize(pattern)
+                words.extend(wrds)
+                docs_x.append(wrds)
+                docs_y.append(intent["tag"])
+
+            if intent["tag"] not in labels:
+                labels.append(intent["tag"])
+
+        words = [stemmer.stem(w.lower()) for w in words if w != "?"]
+        words = sorted(list(set(words)))
+
+        labels = sorted(labels)
+
+        training = []
+        output = []
+
+        out_empty = [0 for _ in range(len(labels))]
+
+        for x, doc in enumerate(docs_x):
+            bag = []
+
+            wrds = [stemmer.stem(w.lower()) for w in doc]
+
+            for w in words:
+                if w in wrds:
+                    bag.append(1)
+                else:
+                    bag.append(0)
+
+            output_row = out_empty[:]
+            output_row[labels.index(docs_y[x])] = 1
+
+            training.append(bag)
+            output.append(output_row)
+
+        training = numpy.array(training)
+        output = numpy.array(output)
+
+        with open("data.pickle", "wb") as f:
+            pickle.dump((words, labels, training, output), f)
+
+    tensorflow.reset_default_graph()
+
+    net = tflearn.input_data(shape=[None, len(training[0])])
+    net = tflearn.fully_connected(net, 8)
+    net = tflearn.fully_connected(net, 8)
+    net = tflearn.fully_connected(net, len(output[0]), activation="softmax")
+    net = tflearn.regression(net)
+
+    model = tflearn.DNN(net)
+
+    try:
+        model.load("model.tflearn")
+    except:
+        model.fit(training, output, n_epoch=1000, batch_size=8, show_metric=True)
+        model.save("model.tflearn")
+
+    def bag_of_words(s, word):
+        fullbag = [0 for _ in range(len(word))]
+
+        s_words = nltk.word_tokenize(s)
+        s_words = [stemmer.stem(word.lower()) for word in s_words]
+
+        for se in s_words:
+            for i, w in enumerate(word):
+                if w == se:
+                    fullbag[i] = 1
+
+        return numpy.array(fullbag)
+
+    inp = msg
+    results = model.predict([bag_of_words(inp, words)])
+    results_index = numpy.argmax(results)
+    tag = labels[results_index]
+
+    for tg in data["intents"]:
+        if tg['tag'] == tag:
+            responses = tg['responses']
+    return random.choice(responses)
+
 
 
 def get_response(msg):
@@ -41,29 +133,22 @@ def get_response(msg):
         return dfresp.to_string(index=False)
     except:
         print("Cannot find", msg, "Epsilon being attempted")
-        response = generate_response()
+        response = generate_response(msg)
         record_message(msg, response)
+        return response
 
 
 def record_message(message, response):
-    with open('database.csv', mode='w') as db:
+    with open('database.csv', mode='a') as db:
         writer = csv.writer(db, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow([message, response, '0', '0', '1'])
-
-
-def explore():
-    return random.choice(chance)
-
-
-def exploit():
-    return values.index(max(values))
+        writer.writerow([message.lower(), response.lower(), '0', '0', '1'])
 
 
 def choose():
-    if (random.randint(0, 100)) > 10:
-        return values.index(max(values))
+    if (random.randint(0, 100)) < 20:
+        return 1
     else:
-        return random.choice(chance)
+        return 0
 
 
 def read_data():
@@ -82,12 +167,15 @@ def read_data():
 
 while True:
     message = input('> ')
-    response = get_response(message)
-    record_message(message, response)
-    print("AI:", response)
-    score = input('Good response? > ')
-    if response is not None:
-        if score.lower() == "good":
-            record_response_score(message, 1, response)
-        elif score.lower() == "bad":
-            record_response_score(message, -1, response)
+    choose = choose()
+    if choose == 1:
+        generate_response(message)
+    else:
+        response = get_response(message)
+        print("AI:", response)
+        score = input('Good response? > ')
+        if response is not None:
+            if score.lower() == "good":
+                record_response_score(message, 1, response)
+            elif score.lower() == "bad":
+                record_response_score(message, -1, response)
