@@ -22,9 +22,13 @@ def record_response_score(message, score, response):
     df = pd.read_csv("database.csv")
     val = df.loc[(df["parent"] == message) & (df["child"] == response), "chance_rank"]
     row = (val.to_string(index=False))
-    print(row)
-    df.loc[row, "chance_rank"] += score
+    df.loc[float(row)-2, 'chance_rank'] += float(score)
     df.to_csv(r'database.csv', index=False)
+
+
+def generate_response():
+    df = pd.read_csv("database.csv")
+    df.combine()
 
 
 def get_response(msg):
@@ -36,21 +40,15 @@ def get_response(msg):
         dfresp = (df["child"])
         return dfresp.to_string(index=False)
     except:
-        print("Cannot find", msg)
+        print("Cannot find", msg, "Epsilon being attempted")
+        response = generate_response()
+        record_message(msg, response)
 
 
-def record_message(message):
-    pass
-
-
-def addchance(message):
-    if message.lower == "good":
-        print("Added to Database")
-        return df("chance_rank") + 1
-
-    if message.lower == "bad":
-        print("Added to Database")
-        return df("chance_rank") - 1
+def record_message(message, response):
+    with open('database.csv', mode='w') as db:
+        writer = csv.writer(db, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        writer.writerow([message, response, '0', '0', '1'])
 
 
 def explore():
@@ -84,13 +82,12 @@ def read_data():
 
 while True:
     message = input('> ')
-    record_message(message)
     response = get_response(message)
+    record_message(message, response)
     print("AI:", response)
     score = input('Good response? > ')
-    if score.lower() == "good":
-        record_response_score(message, 1, response)
-    elif score.lower() == "bad":
-        record_response_score(message, -1, response)
-    else:
-        record_response_score(message, -0.1, response)
+    if response is not None:
+        if score.lower() == "good":
+            record_response_score(message, 1, response)
+        elif score.lower() == "bad":
+            record_response_score(message, -1, response)
