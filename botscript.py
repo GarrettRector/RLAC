@@ -1,14 +1,6 @@
 import random
 import csv
 import pandas as pd
-import tflearn
-import tensorflow
-import numpy
-import nltk
-import json
-import pickle
-from nltk.stem.lancaster import LancasterStemmer
-stemmer = LancasterStemmer()
 df = pd.read_csv("database.csv")
 chance = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 values = [0, 1, 0, 1]
