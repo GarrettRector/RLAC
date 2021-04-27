@@ -5,5 +5,6 @@ created, but if you would like to use it feel free to. just respect the copyrigh
 
 Note: I am not a professional programmer and there will be organization errors. If it annoys you enough just add it to pull requests and I will most likely edit it
 
-# Changes
-Because of the nature of this type of program, changes will happen. Datasets may need to be erased in order to be compatible with the next version, or errors will occur.
+# THIS IS A DEPRECATED PROJECT
+I have kinda screwed up RLAC V1. I tried going way over my head, and I will tone it down in V2. You can access it here:
+[RLAC](https://github.com/GarrettRector/RLAC-V2)
