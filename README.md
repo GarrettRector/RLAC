@@ -1,7 +1,7 @@
 [![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
 
 
-# ⛔️ DEPRECATED. Please consider using the second version here: [RLAC](https://github.com/GarrettRector/RLAC-V2)
+# ⛔️ DEPRECATED.
 
 # RLAC
 RLAC is a AI based chatbot that at its core uses basic reinforced learning with the Epsilon-Greedy Policy
